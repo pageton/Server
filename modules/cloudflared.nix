@@ -55,6 +55,7 @@ in
     serviceConfig = {
       ExecStart = "${pkgs.cloudflared}/bin/cloudflared tunnel --no-autoupdate --config ${configFile} run";
       EnvironmentFile = secretsEnv;
+      PermissionsStartOnly = true;
       Restart = "on-failure";
       RestartSec = 5;
       User = "cloudflared";
@@ -62,6 +63,7 @@ in
       NoNewPrivileges = true;
       ProtectSystem = "strict";
       ProtectHome = true;
+      ReadWritePaths = [ "/etc/cloudflared" ];
       PrivateTmp = true;
       PrivateDevices = true;
     };
