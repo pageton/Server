@@ -36,9 +36,9 @@ let
   startScript = pkgs.writeShellScript "mtproxy-start" ''
     set -euo pipefail
 
-    install -d -m 0750 -o mtproxy -g mtproxy /var/lib/mtproxy
-    curl -fsSL https://core.telegram.org/getProxySecret -o /var/lib/mtproxy/proxy-secret
-    curl -fsSL https://core.telegram.org/getProxyConfig -o /var/lib/mtproxy/proxy-multi.conf
+    ${pkgs.coreutils}/bin/install -d -m 0750 -o mtproxy -g mtproxy /var/lib/mtproxy
+    ${pkgs.curl}/bin/curl -fsSL https://core.telegram.org/getProxySecret -o /var/lib/mtproxy/proxy-secret
+    ${pkgs.curl}/bin/curl -fsSL https://core.telegram.org/getProxyConfig -o /var/lib/mtproxy/proxy-multi.conf
 
     tag_args=()
     if [[ -n "''${MTPROXY_TAG:-}" ]]; then
@@ -79,7 +79,7 @@ in
 
     workers = lib.mkOption {
       type = lib.types.int;
-      default = 1;
+      default = 4;
       description = "MTProxy worker count.";
     };
 
@@ -113,10 +113,11 @@ in
         ExecStart = startScript;
         Restart = "on-failure";
         RestartSec = 5;
+        StateDirectory = "mtproxy";
+        LimitNOFILE = 1000000;
         NoNewPrivileges = true;
         ProtectSystem = "strict";
         ProtectHome = true;
-        ReadWritePaths = [ "/var/lib/mtproxy" ];
         PrivateTmp = true;
         PrivateDevices = true;
       };
