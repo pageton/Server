@@ -67,7 +67,6 @@
     vim
     git
     htop
-    just
   ];
 
   services.mtproxyAymen = {
@@ -75,7 +74,7 @@
     domain = "proxy.sadiq.lol";
     # Keep this off 443 because nginx is already bound there.
     port = 8443;
-    workers = 4;
+    workers = 8;
     # Create this file manually with:
     # MTPROXY_SECRET=<your_secret>
     # MTPROXY_TAG=<optional_tag>

@@ -5,9 +5,6 @@
     "net.ipv4.tcp_max_syn_backlog" = 8192;
     "net.core.somaxconn" = 4096;
     "net.netfilter.nf_conntrack_max" = 262144;
-    "net.ipv4.tcp_keepalive_time" = 60;
-    "net.ipv4.tcp_keepalive_intvl" = 10;
-    "net.ipv4.tcp_keepalive_probes" = 6;
   };
 
   networking.firewall = {
@@ -16,12 +13,12 @@
       iptables -N MTPROXY_GUARD 2>/dev/null || true
       iptables -F MTPROXY_GUARD
 
-      iptables -A MTPROXY_GUARD -m connlimit --connlimit-above 150 --connlimit-mask 32 -j DROP
+      iptables -A MTPROXY_GUARD -m connlimit --connlimit-above 60 --connlimit-mask 32 -j DROP
       iptables -A MTPROXY_GUARD -m hashlimit \
         --hashlimit-name mtproxy_rate \
         --hashlimit-mode srcip \
-        --hashlimit-upto 60/second \
-        --hashlimit-burst 200 \
+        --hashlimit-upto 30/second \
+        --hashlimit-burst 100 \
         -j RETURN
       iptables -A MTPROXY_GUARD -j DROP
 

@@ -79,7 +79,7 @@ in
 
     workers = lib.mkOption {
       type = lib.types.int;
-      default = 4;
+      default = 12;
       description = "MTProxy worker count.";
     };
 
