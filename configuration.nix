@@ -18,6 +18,7 @@
     ./disk-config.nix
     ./modules/nix.nix
     ./modules/security.nix
+    ./modules/ddos.nix
     ./modules/bitwarden.nix
     ./modules/nginx.nix
     ./modules/cloudflared.nix
@@ -66,6 +67,7 @@
     vim
     git
     htop
+    just
   ];
 
   services.mtproxyAymen = {
@@ -73,7 +75,7 @@
     domain = "proxy.sadiq.lol";
     # Keep this off 443 because nginx is already bound there.
     port = 8443;
-    workers = 1;
+    workers = 4;
     # Create this file manually with:
     # MTPROXY_SECRET=<your_secret>
     # MTPROXY_TAG=<optional_tag>
