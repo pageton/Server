@@ -33,26 +33,55 @@ let
     '';
   };
 
+  # Shared curl flags: connection timeout, overall timeout, retries with delay.
+  curlOpts = "--connect-timeout 10 --max-time 30 --retry 3 --retry-delay 2 --retry-all-errors";
+
+  stateDir = "/var/lib/mtproxy";
+
+  # Script to atomically download a file with fallback to the existing copy.
+  # Usage: downloadWithFallback <url> <dest>
+  # Downloads to <dest>.tmp first, then renames on success.
+  # If download fails and <dest> already exists, keeps the old copy.
+  downloadWithFallback = pkgs.writeShellScript "mtproxy-download" ''
+    url="$1"
+    dest="$2"
+
+    if ${pkgs.curl}/bin/curl ${curlOpts} -fsSL "$url" -o "$dest.tmp"; then
+      mv -f "$dest.tmp" "$dest"
+    else
+      rm -f "$dest.tmp"
+      if [[ -f "$dest" ]]; then
+        echo "WARNING: Failed to download $url, using cached copy." >&2
+      else
+        echo "ERROR: Failed to download $url and no cached copy exists." >&2
+        exit 1
+      fi
+    fi
+  '';
+
   startScript = pkgs.writeShellScript "mtproxy-start" ''
     set -euo pipefail
-
-    ${pkgs.coreutils}/bin/install -d -m 0750 -o mtproxy -g mtproxy /var/lib/mtproxy
-    ${pkgs.curl}/bin/curl -fsSL https://core.telegram.org/getProxySecret -o /var/lib/mtproxy/proxy-secret
-    ${pkgs.curl}/bin/curl -fsSL https://core.telegram.org/getProxyConfig -o /var/lib/mtproxy/proxy-multi.conf
 
     tag_args=()
     if [[ -n "''${MTPROXY_TAG:-}" ]]; then
       tag_args=(-P "$MTPROXY_TAG")
     fi
 
+    ${downloadWithFallback} https://core.telegram.org/getProxySecret ${stateDir}/proxy-secret
+    ${downloadWithFallback} https://core.telegram.org/getProxyConfig ${stateDir}/proxy-multi.conf
+
     exec ${mtproxyPkg}/bin/mtproto-proxy \
-      -u mtproxy \
       -p ${toString cfg.statsPort} \
       -H ${toString cfg.port} \
       -S "$MTPROXY_SECRET" \
       "''${tag_args[@]}" \
-      --aes-pwd /var/lib/mtproxy/proxy-secret /var/lib/mtproxy/proxy-multi.conf \
+      --aes-pwd ${stateDir}/proxy-secret ${stateDir}/proxy-multi.conf \
       -M ${toString cfg.workers}
+  '';
+
+  # Periodic refresh of proxy-multi.conf to keep DC config current.
+  configRefreshScript = pkgs.writeShellScript "mtproxy-refresh-config" ''
+    ${downloadWithFallback} https://core.telegram.org/getProxyConfig ${stateDir}/proxy-multi.conf
   '';
 in
 {
@@ -105,6 +134,11 @@ in
       wants = [ "network-online.target" ];
       wantedBy = [ "multi-user.target" ];
 
+      # Restart on failure but with exponential backoff to avoid crash loops
+      # when Telegram servers are unreachable.
+      startLimitIntervalSec = 300;
+      startLimitBurst = 5;
+
       serviceConfig = {
         Type = "simple";
         User = "mtproxy";
@@ -112,14 +146,48 @@ in
         EnvironmentFile = cfg.environmentFile;
         ExecStart = startScript;
         Restart = "on-failure";
-        RestartSec = 5;
+        RestartSec = "5s";
+
         StateDirectory = "mtproxy";
+        StateDirectoryMode = "0750";
+
+        # Watchdog: declare health; systemd restarts if no ping within 60s.
+        WatchdogSec = 60;
+
         LimitNOFILE = 1000000;
         NoNewPrivileges = true;
         ProtectSystem = "strict";
         ProtectHome = true;
         PrivateTmp = true;
         PrivateDevices = true;
+
+        # Restrict network to TCP only (MTProxy needs outbound HTTPS + inbound client port).
+        RestrictAddressFamilies = [ "AF_INET" "AF_INET6" ];
+      };
+    };
+
+    # Refresh proxy-multi.conf every 6 hours to keep DC config current.
+    # This prevents the proxy from becoming unreliable when Telegram rotates DCs.
+    systemd.timers.mtproxy-refresh = {
+      description = "Refresh MTProxy DC configuration";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnCalendar = "*-*-* 00/6:00:00";
+        Persistent = true;
+      };
+    };
+
+    systemd.services.mtproxy-refresh = {
+      description = "Refresh MTProxy DC configuration";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        User = "mtproxy";
+        Group = "mtproxy";
+        ExecStart = configRefreshScript;
+        StateDirectory = "mtproxy";
       };
     };
 
