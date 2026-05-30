@@ -6,6 +6,11 @@
     settings = {
       user = { inherit (constants.user) name email; };
 
+      # Force SSH for GitHub — faster and authenticated
+      url = {
+        "git@github.com:".insteadOf = "https://github.com/";
+      };
+
       pull.rebase = true;
       push = {
         autoSetupRemote = true;
