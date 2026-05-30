@@ -87,11 +87,13 @@
 
 ## Environment adaptation (conditional)
 
-- **This is NixOS.** Never suggest `apt`, `dnf`, `pacman`, `yay`, `paru`, `brew`, or any non-Nix package manager.
-- Use `nix shell nixpkgs#<pkg>`, `nix run nixpkgs#<pkg>`, or `nix develop` for ad-hoc packages.
+- **This is NixOS.** Never suggest `apt`, `dnf`, `pacman`, `yay`, `paru`, `brew`, `nix-env`, or any non-Nix package manager.
+- Do NOT use `nix-env -qaP`, `nix-env -iA`, or `nix-env -i` — these are legacy commands.
+- Use `nix shell nixpkgs#<pkg>` for one-off tools (runs without installing).
+- Use `nix run nixpkgs#<pkg>` to run a package directly.
 - System packages are managed declaratively in `~/Server/configuration.nix` — add packages there, then `just deploy`.
 - User packages are managed via `bun add -g` or Home-Manager — never `npm install -g`.
-- For quick one-off tools: `nix shell nixpkgs#<tool>` (runs without installing).
+- To search for packages: `nix search nixpkgs <term>` (not `nix-env -qaP`).
 - Detect the environment before giving package/install advice.
 - If in Nix/NixOS projects (`flake.nix`, `shell.nix`, `nix/`, `justfile` with nix workflows):
   - Do not suggest `apt`, `dnf`, `pacman`, or `brew`.
