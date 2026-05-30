@@ -69,6 +69,19 @@
     htop
   ];
 
+  # SOPS secrets — decrypted at activation to /run/secrets/
+  sops = {
+    defaultSopsFile = ./secrets/secrets.yaml;
+    age.keyFile = "/home/${user}/.config/sops/age/keys.txt";
+    secrets = {
+      zai_api_key = { owner = user; };
+      openrouter_api_key = { owner = user; };
+      "context7-api-key" = { owner = user; };
+      deepseek_api_key = { owner = user; };
+      mimo_api_key = { owner = user; };
+    };
+  };
+
   services.mtproxyAymen = {
     enable = true;
     domain = "proxy.sadiq.lol";
