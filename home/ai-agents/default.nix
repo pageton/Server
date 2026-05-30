@@ -270,89 +270,21 @@ in
       fi
     '';
 
-    # ── Activation: skills installation ──────────────────────────────────
+    # ── Activation: skills — sync from local via `just sync-skills` ─────
+    # Server network is too slow to clone 86 repos.
+    # Install locally, then: just sync-skills
     home.activation.installAgentSkills = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      export BUN_INSTALL="$HOME/.bun"
-      export PATH="${pkgs.git}/bin:${pkgs.nodejs_22}/bin:${pkgs.bun}/bin:$BUN_INSTALL/bin:$PATH"
-      export SKILLS_CLONE_TIMEOUT_MS=120000
-
-      SKILLS_BIN="$BUN_INSTALL/bin/skills"
-      if [[ ! -x "$SKILLS_BIN" ]]; then
-        SKILLS_BIN="$(command -v skills 2>/dev/null || true)"
-      fi
-
-      if [[ -z "$SKILLS_BIN" ]]; then
-        echo "📦 Bootstrapping skills CLI..."
-        if ! $DRY_RUN_CMD "${pkgs.bun}/bin/bun" add --global --cwd "$HOME" --no-summary skills; then
-          echo "❌ Failed to bootstrap skills CLI"
-          exit 1
-        fi
-        SKILLS_BIN="$BUN_INSTALL/bin/skills"
-        [[ -x "$SKILLS_BIN" ]] || SKILLS_BIN="$(command -v skills 2>/dev/null || true)"
-      fi
-
-      if [[ -z "$SKILLS_BIN" ]]; then
-        echo "❌ skills CLI not found after bootstrap"
-        exit 1
-      fi
-
-      desired_state=$(printf '%s' '${builtins.toJSON skills}' | ${pkgs.coreutils}/bin/sha256sum | cut -d' ' -f1)
       cache_dir="$HOME/.cache/ai-agents"
       cache_file="$cache_dir/skills-state.sha256"
       lock_file="$HOME/.agents/.skill-lock.json"
 
-      skip=0
       if [[ -f "$cache_file" ]] && [[ -f "$lock_file" ]]; then
-        current="$(cat "$cache_file")"
-        [[ "$current" == "$desired_state" ]] && skip=1
-      fi
-
-      if [[ "$skip" -eq 0 ]]; then
-        echo "🧹 Cleaning existing skills..."
-        "$SKILLS_BIN" remove --global --all --yes 2>/dev/null || true
-        rm -rf "$HOME/.agents/skills"/* 2>/dev/null || true
-        rm -rf "$HOME/.agents/.skill-lock.json" 2>/dev/null || true
-        rm -rf "$HOME/.claude/skills"/* 2>/dev/null || true
-
-        attempt_cmd() {
-          local label="$1"; shift
-          for attempt in 1 2 3; do
-            if $DRY_RUN_CMD "$@"; then return 0; fi
-            echo "⚠ $label failed (attempt $attempt/3)"
-            sleep 1
-          done
-          return 1
-        }
-
-        failed=0; success=0
-        echo "📦 Installing agent skills..."
-        ${lib.concatStringsSep "\n" (map (skill:
-          if builtins.isString skill then ''
-            echo "  → ${skill}"
-            if ! attempt_cmd "install ${skill}" "$SKILLS_BIN" add "${skill}" --global --yes; then
-              echo "❌ Failed: ${skill}"; failed=$((failed + 1))
-            else
-              echo "✔ ${skill}"; success=$((success + 1))
-            fi
-          '' else ''
-            echo "  → ${skill.repo}/${skill.skill}"
-            if ! attempt_cmd "install ${skill.repo}/${skill.skill}" "$SKILLS_BIN" add "https://github.com/${skill.repo}" --skill "${skill.skill}" --global --yes; then
-              echo "❌ Failed: ${skill.repo}/${skill.skill}"; failed=$((failed + 1))
-            else
-              echo "✔ ${skill.repo}/${skill.skill}"; success=$((success + 1))
-            fi
-          ''
-        ) skills)}
-
-        echo "🧠 Skills: success=$success failures=$failed"
-        mkdir -p "$cache_dir"
-        printf '%s' "$desired_state" > "$cache_file"
-        echo "✓ Skills installation complete"
+        echo "✓ Skills already synced (run 'just sync-skills' to update)"
       else
-        echo "✓ Skills configuration unchanged; skipping"
+        echo "⚠ Skills not installed — run 'just sync-skills' from your local machine"
       fi
 
-      # Mirror skills to OpenCode config dir
+      # Mirror skills to OpenCode config dir if present
       if [[ -d "$HOME/.claude/skills" ]]; then
         target="$HOME/.config/opencode/skills"
         mkdir -p "$target"
