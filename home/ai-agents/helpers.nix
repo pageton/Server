@@ -2,6 +2,8 @@
 { cfg, lib, constants }:
 
 let
+  globalInstructions = builtins.readFile ./global-instructions.md;
+
   # ── Models (same as System) ──────────────────────────────────────────────
   models = {
     claude-opus = "opencode/claude-opus-4-7";
@@ -92,6 +94,7 @@ let
     mcp = opencodeMcpServers;
     plugin = cfg.opencode.plugins;
     provider = cfg.opencode.providers;
+    instructions = [ globalInstructions ];
     lsp = {
       bash = {
         command = [ "bash-language-server" "start" ];

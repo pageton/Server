@@ -4,6 +4,12 @@
   options.programs.aiAgents = {
     enable = lib.mkEnableOption "AI coding agents configuration";
 
+    globalInstructions = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      description = "Global instructions injected into all AI agents";
+    };
+
     secrets = {
       zaiApiKeyFile = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
