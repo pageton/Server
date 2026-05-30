@@ -1,13 +1,16 @@
-# Zsh config for Server — keybindings and basic setup.
-{ lib, ... }:
+# Zsh config for Server — PATH, keybindings.
+{ config, lib, ... }:
 {
+  home.sessionPath = [
+    "${config.home.homeDirectory}/.bun/bin"
+  ];
+
+  home.sessionVariables = {
+    BUN_INSTALL = "${config.home.homeDirectory}/.bun";
+  };
+
   programs.zsh = {
     enable = true;
-    envExtra = ''
-      # Bun
-      export BUN_INSTALL="$HOME/.bun"
-      export PATH="$BUN_INSTALL/bin:$PATH"
-    '';
     initContent = lib.mkBefore ''
       # Ctrl+Arrow word navigation
       bindkey "^[[1;5C" forward-word
