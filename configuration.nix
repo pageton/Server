@@ -70,7 +70,11 @@
     gh
     zsh
     just
+    unzip
   ];
+
+  # Allow running dynamically linked binaries (bun-installed CLIs)
+  programs.nix-ld.enable = true;
 
   # SOPS secrets — decrypted at activation to /run/secrets/
   sops = {
