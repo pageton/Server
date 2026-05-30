@@ -274,6 +274,7 @@ in
     home.activation.installAgentSkills = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       export BUN_INSTALL="$HOME/.bun"
       export PATH="${pkgs.git}/bin:${pkgs.nodejs_22}/bin:${pkgs.bun}/bin:$BUN_INSTALL/bin:$PATH"
+      export SKILLS_CLONE_TIMEOUT_MS=600000
 
       SKILLS_BIN="$BUN_INSTALL/bin/skills"
       if [[ ! -x "$SKILLS_BIN" ]]; then
