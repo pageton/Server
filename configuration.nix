@@ -73,6 +73,17 @@
     unzip
     musl
     github-mcp-server
+
+    # LSP servers for OpenCode
+    bash-language-server
+    gopls
+    nixd
+    pyright
+    typescript-language-server
+    vscode-json-languageserver
+    yaml-language-server
+    clang-tools
+    rust-analyzer
   ];
 
   # Allow running dynamically linked binaries (bun-installed CLIs)
