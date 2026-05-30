@@ -69,6 +69,7 @@
     htop
     gh
     zsh
+    just
   ];
 
   # SOPS secrets — decrypted at activation to /run/secrets/
