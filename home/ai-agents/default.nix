@@ -207,16 +207,6 @@ in
 
       OPENCODE_CFG="$HOME/.config/opencode/opencode.json"
 
-      # --- Z.AI ---
-      if [[ -n "${cfg.secrets.zaiApiKeyFile or ""}" ]] && [[ -f "${cfg.secrets.zaiApiKeyFile}" ]]; then
-        ZAI_KEY="$(cat "${cfg.secrets.zaiApiKeyFile}")"
-        if [[ -f "$OPENCODE_CFG" ]]; then
-          patch_json_file "$OPENCODE_CFG" key "$ZAI_KEY" '${helpers.opencodeZaiFilter}'
-          echo "✓ Patched opencode.json with Z.AI API key"
-        fi
-        unset ZAI_KEY
-      fi
-
       # --- OpenRouter ---
       if [[ -n "${cfg.secrets.openrouterApiKeyFile or ""}" ]] && [[ -f "${cfg.secrets.openrouterApiKeyFile}" ]]; then
         OPENROUTER_KEY="$(cat "${cfg.secrets.openrouterApiKeyFile}")"
@@ -298,7 +288,7 @@ in
       fi
     '';
 
-    # ── Auto-update OpenCode CLI ─────────────────────────────────────────
+    # ── Auto-update OpenCode CLI + install codegraph ─────────────────────
     home.activation.updateOpenCodeCLI = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       export PATH="${pkgs.nodejs_22}/bin:${pkgs.bun}/bin:$HOME/.bun/bin:$PATH"
       export BUN_INSTALL="$HOME/.bun"
@@ -308,6 +298,12 @@ in
       else
         echo "📦 Installing OpenCode CLI..."
         ${pkgs.bun}/bin/bun add -g opencode-ai && echo "✔ OpenCode installed" || echo "⚠ OpenCode install failed"
+      fi
+
+      # Install codegraph MCP server
+      if ! command -v codegraph &>/dev/null && [[ ! -x "$HOME/.bun/bin/codegraph" ]]; then
+        echo "📦 Installing CodeGraph..."
+        ${pkgs.bun}/bin/bun add -g @colbymchenry/codegraph && echo "✔ CodeGraph installed" || echo "⚠ CodeGraph install failed"
       fi
     '';
     }) # end mkIf

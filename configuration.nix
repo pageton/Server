@@ -71,6 +71,8 @@
     zsh
     just
     unzip
+    musl
+    github-mcp-server
   ];
 
   # Allow running dynamically linked binaries (bun-installed CLIs)

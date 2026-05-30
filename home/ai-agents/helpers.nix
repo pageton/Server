@@ -58,6 +58,11 @@ let
       command = "semgrep";
       args = [ "mcp" ];
     };
+    codegraph = {
+      enable = true;
+      command = "codegraph";
+      args = [ "serve" "--mcp" ];
+    };
   };
 
   # ── MCP transforms for OpenCode format ───────────────────────────────────
@@ -109,14 +114,7 @@ let
     small_model = models.zen;
   };
 
-  # ── Z.AI jq filters for secret patching ──────────────────────────────────
-  opencodeZaiFilter = ''
-    walk(
-      if type == "string" then
-        gsub("__ZAI_API_KEY_PLACEHOLDER__"; $key)
-      else . end
-    )
-  '';
+  # ── jq filters for secret patching ───────────────────────────────────────
   githubPlaceholderFilter = ''
     walk(if type == "string" then gsub("__GITHUB_TOKEN_PLACEHOLDER__"; $token) else . end)
   '';
@@ -129,6 +127,5 @@ let
 
 in {
   inherit models mcpServers opencodeSettings
-    opencodeZaiFilter githubPlaceholderFilter
-    openrouterPlaceholderFilter context7PlaceholderFilter;
+    githubPlaceholderFilter openrouterPlaceholderFilter context7PlaceholderFilter;
 }
