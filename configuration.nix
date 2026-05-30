@@ -67,6 +67,8 @@
     vim
     git
     htop
+    gh
+    zsh
   ];
 
   # SOPS secrets — decrypted at activation to /run/secrets/

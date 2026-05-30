@@ -14,5 +14,6 @@
     ./ai-agents/default.nix
     ./git.nix
     ./gh.nix
+    ./zsh.nix
   ];
 }
