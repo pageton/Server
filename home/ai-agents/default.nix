@@ -207,6 +207,16 @@ in
 
       OPENCODE_CFG="$HOME/.config/opencode/opencode.json"
 
+      # --- Z.AI ---
+      if [[ -n "${cfg.secrets.zaiApiKeyFile or ""}" ]] && [[ -f "${cfg.secrets.zaiApiKeyFile}" ]]; then
+        ZAI_KEY="$(cat "${cfg.secrets.zaiApiKeyFile}")"
+        if [[ -f "$OPENCODE_CFG" ]]; then
+          patch_json_file "$OPENCODE_CFG" key "$ZAI_KEY" '${helpers.zaiPlaceholderFilter}'
+          echo "✓ Patched opencode.json with Z.AI API key"
+        fi
+        unset ZAI_KEY
+      fi
+
       # --- OpenRouter ---
       if [[ -n "${cfg.secrets.openrouterApiKeyFile or ""}" ]] && [[ -f "${cfg.secrets.openrouterApiKeyFile}" ]]; then
         OPENROUTER_KEY="$(cat "${cfg.secrets.openrouterApiKeyFile}")"

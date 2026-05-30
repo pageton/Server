@@ -15,11 +15,6 @@ in
   programs.zsh = {
     enable = true;
     initContent = lib.mkBefore ''
-      # Z.AI API key (for MCP servers)
-      if [[ -f /run/secrets/zai_api_key ]]; then
-        export ZAI_API_KEY="$(cat /run/secrets/zai_api_key)"
-      fi
-
       # Ctrl+Arrow word navigation
       bindkey "^[[1;5C" forward-word
       bindkey "^[[1;5D" backward-word

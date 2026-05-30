@@ -31,7 +31,7 @@ let
     type = "remote";
     url = "${zaiBaseUrl}/${path}/mcp";
     headers = {
-      Authorization = "Bearer {env:ZAI_API_KEY}";
+      Authorization = "Bearer __ZAI_API_KEY_PLACEHOLDER__";
     };
   };
 
@@ -62,6 +62,11 @@ let
       enable = true;
       command = "codegraph";
       args = [ "serve" "--mcp" ];
+    };
+    agentmemory = {
+      enable = true;
+      command = "bunx";
+      args = [ "--silent" "@agentmemory/mcp@latest" ];
     };
   };
 
@@ -115,6 +120,9 @@ let
   };
 
   # ── jq filters for secret patching ───────────────────────────────────────
+  zaiPlaceholderFilter = ''
+    walk(if type == "string" then gsub("__ZAI_API_KEY_PLACEHOLDER__"; $key) else . end)
+  '';
   githubPlaceholderFilter = ''
     walk(if type == "string" then gsub("__GITHUB_TOKEN_PLACEHOLDER__"; $token) else . end)
   '';
@@ -127,5 +135,6 @@ let
 
 in {
   inherit models mcpServers opencodeSettings
-    githubPlaceholderFilter openrouterPlaceholderFilter context7PlaceholderFilter;
+    zaiPlaceholderFilter githubPlaceholderFilter
+    openrouterPlaceholderFilter context7PlaceholderFilter;
 }
