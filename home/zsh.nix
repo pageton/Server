@@ -1,9 +1,9 @@
 # Zsh config for Server — keybindings and basic setup.
-{ ... }:
+{ lib, ... }:
 {
   programs.zsh = {
     enable = true;
-    initExtraFirst = ''
+    initContent = lib.mkBefore ''
       # Ctrl+Arrow word navigation
       bindkey "^[[1;5C" forward-word
       bindkey "^[[1;5D" backward-word

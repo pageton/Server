@@ -43,7 +43,7 @@ sops-edit:
 # Deploy both NixOS + Home-Manager to remote
 full-deploy:
     nixos-rebuild switch --flake .#server --build-host {{host}} --target-host {{host}} --sudo --ask-sudo-password
-    ssh {{host}} "home-manager switch --flake ~/Server#sadiq"
+    ssh {{host}} "home-manager switch -b backup --flake ~/Server#sadiq"
 
 # Sync skills from local machine to server (fast local network)
 sync-skills:

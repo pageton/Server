@@ -301,12 +301,13 @@ in
     # ── Auto-update OpenCode CLI ─────────────────────────────────────────
     home.activation.updateOpenCodeCLI = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       export PATH="${pkgs.nodejs_22}/bin:${pkgs.bun}/bin:$HOME/.bun/bin:$PATH"
+      export BUN_INSTALL="$HOME/.bun"
       if command -v opencode &>/dev/null || [[ -x "$HOME/.bun/bin/opencode" ]]; then
         echo "📦 Updating OpenCode CLI..."
-        ${pkgs.bun}/bin/bun update -g opencode-ai 2>/dev/null && echo "✔ OpenCode updated" || echo "⚠ OpenCode update skipped"
+        ${pkgs.bun}/bin/bun update -g opencode-ai && echo "✔ OpenCode updated" || echo "⚠ OpenCode update failed"
       else
         echo "📦 Installing OpenCode CLI..."
-        ${pkgs.bun}/bin/bun add -g opencode-ai 2>/dev/null && echo "✔ OpenCode installed" || echo "⚠ OpenCode install failed"
+        ${pkgs.bun}/bin/bun add -g opencode-ai && echo "✔ OpenCode installed" || echo "⚠ OpenCode install failed"
       fi
     '';
     }) # end mkIf
