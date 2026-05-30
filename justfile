@@ -1,4 +1,4 @@
-host := "USER@SERVER_IP"
+host := "sadiq@server"
 
 # Build and switch NixOS config on remote server
 deploy:
@@ -44,6 +44,16 @@ sops-edit:
 full-deploy:
     nixos-rebuild switch --flake .#server --build-host {{host}} --target-host {{host}} --sudo --ask-sudo-password
     ssh {{host}} "home-manager switch --flake ~/Server#sadiq"
+
+# Sync skills from local machine to server (fast local network)
+sync-skills:
+    rsync -avz --delete ~/.agents/skills/ {{host}}:~/.agents/skills/
+    rsync -avz --delete ~/.claude/skills/ {{host}}:~/.claude/skills/
+    rsync -avz --delete ~/.config/opencode/skills/ {{host}}:~/.config/opencode/skills/
+    ssh {{host}} "mkdir -p ~/.cache/ai-agents ~/.agents"
+    rsync -avz ~/.cache/ai-agents/skills-state.sha256 {{host}}:~/.cache/ai-agents/skills-state.sha256
+    ssh {{host}} "touch ~/.agents/.skill-lock.json"
+    @echo "✓ Skills synced to server"
 
 # Run all checks
 qa: check
